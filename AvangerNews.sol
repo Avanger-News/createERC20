@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.1;
 
-// Standard ERC20 token implementation. See the docs for more info:
-// https://eips.ethereum.org/EIPS/eip-20
-// https://docs.openzeppelin.com/contracts/3.x/api/token/erc20
 contract ERC20 {
     string internal _name;
     string internal _symbol;
@@ -19,7 +16,6 @@ contract ERC20 {
     function symbol() public view returns (string memory) { return _symbol; }
     function decimals() public view returns (uint8) { return _decimals; }
 
-    // totalSupply is updated on its own whether tokens are minted/burned
     function totalSupply() public view returns (uint256) { return _totalSupply; }
 
     function balanceOf(address _owner) public view returns (uint256) { return _balances[_owner]; }
@@ -61,7 +57,6 @@ contract ERC20 {
     }
 }
 
-// Contract for the token
 contract AvangerNews is ERC20 {
     address public _minter;
     address public _dev_fee_address;
@@ -76,29 +71,29 @@ contract AvangerNews is ERC20 {
     event ToggledDevFee(bool _devfeeStatus);
 
     constructor() {
-        // Initialize contract values
+    
         _name = "AVNGR";
         _symbol = "AVNGR";
         _decimals = 18;
-        _maxSupply = 21000000 * (10 ** _decimals); // 21 million * (10^18 decimals)
-        _initialSupply = 21000000 * (10 ** _decimals); // roughly 10%, swap funding + initial devfee
+        _maxSupply = 21000000 * (10 ** _decimals);
+        _initialSupply = 21000000 * (10 ** _decimals);
         _totalSupply = _initialSupply;
         _devFeeEnabled = false;
-        // Create the tokens and make the contract address both the minter and the devfee collector
+        
         _balances[msg.sender] = _initialSupply;
         _minter = msg.sender;
         _dev_fee_address = msg.sender;
         emit Transfer(address(0), msg.sender, _initialSupply);
     }
 
-    // Minting block
+   
     modifier minterOnly() {
         require(msg.sender == _minter, "Account doesn't have minting privileges");
         _;
     }
 
     function switchMinter(address _newMinter) public minterOnly returns (bool) {
-        // Minter address is the only one that can change the minter role, if they are an contract, it will be binded to it forever
+       
         require(_newMinter != address(0), "Transferring ownership to zero account is forbidden");
 
         _minter = _newMinter;
@@ -108,7 +103,7 @@ contract AvangerNews is ERC20 {
 
     function mint(address _to, uint256 _amount) public minterOnly returns (bool) {
         require(_to != address(0), "Minting to zero account is forbidden");
-        require(_amount > 100000, "Minting requires at least 0.0000000000001 AVGNR"); // That is done on purpose to avoid an bad truncated value on the line below
+        require(_amount > 100000, "Minting requires at least 0.0000000000001 AVGNR");
         if (_devFeeEnabled) {
             uint256 _amount_devfee = _amount / 20;  // 5%
             uint256 _totalAmount = _amount_devfee + _amount;
@@ -121,7 +116,7 @@ contract AvangerNews is ERC20 {
             require(_amount + _totalSupply < _maxSupply, "Minting will result in more than max supply; denied");
         }
         
-        // Send amount to user
+       
         _totalSupply += _amount;
         _balances[_to] += _amount;
         emit Minted(_to, _amount);
@@ -130,7 +125,7 @@ contract AvangerNews is ERC20 {
         return true;
     }
 
-    // Devfee block
+    
     modifier devfeeOnly() {
         require(msg.sender == _dev_fee_address, "Account doesn't have devfee privileges");
         _;
@@ -150,7 +145,7 @@ contract AvangerNews is ERC20 {
         return true;
     }
 
-    // Burning block
+ 
     function burn(uint256 _amount) public returns (bool) {
         require(_amount > 0, "Burning requires a non-zero amount");
         require(_amount <= _balances[msg.sender], "ERC20: insufficient funds");
